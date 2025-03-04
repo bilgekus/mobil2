@@ -6,10 +6,8 @@ import {
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  TouchableWithoutFeedback,
-  Keyboard,
+  SafeAreaView,
+  Alert,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { AuthContext } from '../context/AuthContext';
@@ -23,195 +21,217 @@ const LoginScreen = () => {
 
   const handleLogin = () => {
     if (email.trim() === '' || password.trim() === '') {
-      alert('Lütfen email ve şifrenizi girin');
+      Alert.alert('Uyarı', 'Lütfen email ve şifrenizi girin');
       return;
     }
     login(email, password);
   };
 
+  const handleQuickLogin = (type) => {
+    if (type === 'admin') {
+      login('admin@gmail.com', 'admin1234');
+    } else {
+      login('user@gmail.com', 'user1234');
+    }
+  };
+
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <KeyboardAvoidingView 
-        style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-        {/* Dekoratif daireler */}
-        <View style={styles.topCircle} />
-        <View style={styles.bottomCircle} />
+    <SafeAreaView style={styles.container}>
+      <View style={styles.content}>
+        <Text style={styles.title}>Giriş Yap</Text>
         
-        <View style={styles.content}>
-          <Text style={styles.title}>Giriş Yap</Text>
-          
-          <View style={styles.inputContainer}>
-            <MaterialIcons name="email" size={24} color="#6c63ff" style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="E-posta"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              value={email}
-              onChangeText={setEmail}
+        {/* E-mail Input */}
+        <View style={styles.inputContainer}>
+          <MaterialIcons name="email" size={24} color="#6c63ff" style={styles.inputIcon} />
+          <TextInput
+            style={styles.input}
+            placeholder="E-posta"
+            value={email}
+            onChangeText={setEmail}
+            editable={true}
+          />
+        </View>
+        
+        {/* Password Input */}
+        <View style={styles.inputContainer}>
+          <MaterialIcons name="lock" size={24} color="#6c63ff" style={styles.inputIcon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Şifre"
+            secureTextEntry={!showPassword}
+            value={password}
+            onChangeText={setPassword}
+            editable={true}
+          />
+          <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+            <MaterialIcons 
+              name={showPassword ? 'visibility' : 'visibility-off'} 
+              size={24} 
+              color="#6c63ff" 
             />
-          </View>
-          
-          <View style={styles.inputContainer}>
-            <MaterialIcons name="lock" size={24} color="#6c63ff" style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Şifre"
-              secureTextEntry={!showPassword}
-              value={password}
-              onChangeText={setPassword}
-            />
+          </TouchableOpacity>
+        </View>
+        
+        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+          {isLoading ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text style={styles.loginButtonText}>Giriş Yap</Text>
+          )}
+        </TouchableOpacity>
+        
+        {/* Hızlı Giriş Butonları */}
+        <View style={styles.quickLoginContainer}>
+          <Text style={styles.quickLoginTitle}>Hızlı Giriş:</Text>
+          <View style={styles.buttonRow}>
             <TouchableOpacity 
-              style={styles.passwordToggle} 
-              onPress={() => setShowPassword(!showPassword)}
+              style={[styles.quickButton, styles.adminButton]} 
+              onPress={() => handleQuickLogin('admin')}
             >
-              <MaterialIcons 
-                name={showPassword ? 'visibility' : 'visibility-off'} 
-                size={24} 
-                color="#6c63ff" 
-              />
+              <MaterialIcons name="admin-panel-settings" size={20} color="white" />
+              <Text style={styles.quickButtonText}>Admin</Text>
             </TouchableOpacity>
-          </View>
-          
-          <TouchableOpacity style={styles.forgotPassword}>
-            <Text style={styles.forgotPasswordText}>Şifremi Unuttum</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={styles.loginButton}
-            onPress={handleLogin}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator size="small" color="white" />
-            ) : (
-              <Text style={styles.loginButtonText}>Giriş Yap</Text>
-            )}
-          </TouchableOpacity>
-          
-          <View style={styles.registerContainer}>
-            <Text style={styles.registerText}>Hesabınız yok mu? </Text>
-            <TouchableOpacity onPress={() => router.push('/(auth)/register')}>
-              <Text style={styles.registerLink}>Kayıt Ol</Text>
+            
+            <TouchableOpacity 
+              style={[styles.quickButton, styles.userButton]}
+              onPress={() => handleQuickLogin('user')}
+            >
+              <MaterialIcons name="person" size={20} color="white" />
+              <Text style={styles.quickButtonText}>Kullanıcı</Text>
             </TouchableOpacity>
           </View>
         </View>
-      </KeyboardAvoidingView>
-    </TouchableWithoutFeedback>
+        
+        <View style={styles.registerContainer}>
+          <Text style={styles.registerText}>Hesabınız yok mu? </Text>
+          <TouchableOpacity onPress={() => router.push('/(auth)/register')}>
+            <Text style={styles.registerLink}>Kayıt Ol</Text>
+          </TouchableOpacity>
+        </View>
+        
+        <View style={styles.credentialsBox}>
+          <Text style={styles.credentialsTitle}>Test Bilgileri</Text>
+          <Text style={styles.credentialsText}>Admin: admin@gmail.com / admin1234</Text>
+          <Text style={styles.credentialsText}>Kullanıcı: user@gmail.com / user1234</Text>
+        </View>
+      </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f0f2f5',
-    overflow: 'hidden',
+    backgroundColor: '#f5f5f5',
   },
   content: {
     flex: 1,
+    padding: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 30,
-    zIndex: 1,
-  },
-  topCircle: {
-    position: 'absolute',
-    top: -100,
-    right: -100,
-    width: 300,
-    height: 300,
-    borderRadius: 150,
-    backgroundColor: '#6c63ff',
-    opacity: 0.3,
-  },
-  bottomCircle: {
-    position: 'absolute',
-    bottom: -150,
-    left: -150,
-    width: 400,
-    height: 400,
-    borderRadius: 200,
-    backgroundColor: '#4CAF50',
-    opacity: 0.2,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#333',
     marginBottom: 30,
+    color: '#333',
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'white',
-    borderRadius: 10,
-    marginBottom: 15,
-    paddingHorizontal: 15,
-    height: 55,
     width: '100%',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 2,
+    marginBottom: 15,
+    borderRadius: 10,
+    paddingHorizontal: 15,
+    height: 50,
+    borderWidth: 1,
+    borderColor: '#ddd',
   },
   inputIcon: {
     marginRight: 10,
   },
   input: {
     flex: 1,
-    height: '100%',
+    height: 50,
     fontSize: 16,
-  },
-  passwordToggle: {
-    padding: 8,
-  },
-  forgotPassword: {
-    alignSelf: 'flex-end',
-    marginBottom: 25,
-  },
-  forgotPasswordText: {
-    color: '#6c63ff',
-    fontSize: 14,
   },
   loginButton: {
     backgroundColor: '#6c63ff',
-    paddingVertical: 15,
-    paddingHorizontal: 40,
-    borderRadius: 25,
     width: '100%',
+    height: 50,
+    borderRadius: 10,
+    justifyContent: 'center',
     alignItems: 'center',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    marginTop: 10,
   },
   loginButtonText: {
     color: 'white',
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: 'bold',
+  },
+  quickLoginContainer: {
+    width: '100%',
+    marginTop: 30,
+  },
+  quickLoginTitle: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  quickButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '48%',
+    height: 45,
+    borderRadius: 10,
+  },
+  adminButton: {
+    backgroundColor: '#FF5722',
+  },
+  userButton: {
+    backgroundColor: '#2196F3',
+  },
+  quickButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    marginLeft: 5,
   },
   registerContainer: {
     flexDirection: 'row',
     marginTop: 20,
   },
   registerText: {
-    color: '#666',
     fontSize: 16,
+    color: '#666',
   },
   registerLink: {
-    color: '#6c63ff',
     fontSize: 16,
-    fontWeight: '600',
+    color: '#6c63ff',
+    fontWeight: 'bold',
+  },
+  credentialsBox: {
+    backgroundColor: 'rgba(108, 99, 255, 0.1)',
+    padding: 15,
+    borderRadius: 10,
+    marginTop: 30,
+    width: '100%',
+  },
+  credentialsTitle: {
+    textAlign: 'center',
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  credentialsText: {
+    fontSize: 14,
+    marginBottom: 3,
   },
 });
 

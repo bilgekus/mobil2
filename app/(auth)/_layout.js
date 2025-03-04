@@ -10,6 +10,9 @@ export default function AuthLayout() {
         <Stack.Screen name="login" options={{ title: 'Giriş Yap' }} />
         <Stack.Screen name="register" options={{ title: 'Kayıt Ol' }} />
         <Stack.Screen name="home" options={{ title: 'Ana Sayfa' }} />
+        {/* Admin Dashboard sayfasını ekleyin */}
+        <Stack.Screen name="admin-dashboard" options={{ title: 'Yönetici Paneli' }} />
+        
       </Stack>
     </AuthProvider>
   );

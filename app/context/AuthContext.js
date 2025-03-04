@@ -10,18 +10,18 @@ export const AuthProvider = ({ children }) => {
   const [userToken, setUserToken] = useState(null);
   const [userInfo, setUserInfo] = useState(null);
 
-  // Login fonksiyonu
+  // Login fonksiyonu - kullanıcı rolüne göre farklı sayfalara yönlendirme
   const login = useCallback(async (email, password) => {
     setIsLoading(true);
     
     try {
-      // Gerçek API isteği için hazır
-      // Şimdilik test kullanıcısı ile çalışıyor
-      if (email === 'test@gmail.com' && password === 'test1234') {
+      // Admin kullanıcısı için giriş kontrolü
+      if (email === 'admin@gmail.com' && password === 'admin1234') {
         const userData = { 
           email, 
-          token: 'sample_token_123', 
-          name: 'Test Kullanıcı' 
+          token: 'admin_token_123', 
+          name: 'Admin Kullanıcı',
+          role: 'admin' // Admin rolü
         };
 
         // Token ve kullanıcı bilgilerini kaydetme
@@ -31,9 +31,46 @@ export const AuthProvider = ({ children }) => {
         setUserToken(userData.token);
         setUserInfo(userData);
 
-        // Login başarılı olduktan sonra home sayfasına yönlendir
+        // Admin için admin-dashboard sayfasına yönlendir
+        router.replace('/(auth)/admin-dashboard');
+      } 
+      // Normal kullanıcı için giriş kontrolü
+      else if (email === 'user@gmail.com' && password === 'user1234') {
+        const userData = { 
+          email, 
+          token: 'user_token_123', 
+          name: 'Normal Kullanıcı',
+          role: 'user' // Normal kullanıcı rolü
+        };
+
+        // Token ve kullanıcı bilgilerini kaydetme
+        await AsyncStorage.setItem('userToken', userData.token);
+        await AsyncStorage.setItem('userInfo', JSON.stringify(userData));
+
+        setUserToken(userData.token);
+        setUserInfo(userData);
+
+        // Normal kullanıcı için home sayfasına yönlendir
         router.replace('/(auth)/home');
-      } else {
+      } 
+      // Eski test kullanıcısı da çalışmaya devam etsin
+      else if (email === 'test@gmail.com' && password === 'test1234') {
+        const userData = { 
+          email, 
+          token: 'sample_token_123', 
+          name: 'Test Kullanıcı',
+          role: 'user'
+        };
+
+        await AsyncStorage.setItem('userToken', userData.token);
+        await AsyncStorage.setItem('userInfo', JSON.stringify(userData));
+
+        setUserToken(userData.token);
+        setUserInfo(userData);
+
+        router.replace('/(auth)/home');
+      }
+      else {
         throw new Error('Invalid credentials');
       }
     } catch (error) {
@@ -44,7 +81,7 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // Kayıt fonksiyonu
+  // Kayıt fonksiyonu - varsayılan olarak normal kullanıcı rolüyle kayıt
   const register = useCallback(async (name, email, password) => {
     setIsLoading(true);
     
@@ -52,8 +89,9 @@ export const AuthProvider = ({ children }) => {
       // Gerçek API isteği için hazır
       const userData = { 
         email, 
-        token: 'sample_token_123', 
-        name 
+        token: 'user_token_' + Math.random().toString(36).substring(7), 
+        name,
+        role: 'user' // Yeni kayıtlar normal kullanıcı olarak oluşturulur
       };
 
       // Token ve kullanıcı bilgilerini kaydetme
@@ -63,7 +101,7 @@ export const AuthProvider = ({ children }) => {
       setUserToken(userData.token);
       setUserInfo(userData);
 
-      // Kayıt başarılı olduktan sonra home sayfasına yönlendir
+      // Kayıt başarılı olduktan sonra normal kullanıcı sayfasına yönlendir
       router.replace('/(auth)/home');
     } catch (error) {
       console.log('Register error', error);
@@ -92,21 +130,27 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // Uygulama başlangıcında token kontrolü
+  // Uygulama başlangıcında token kontrolü ve kullanıcı rolüne göre yönlendirme
   const isLoggedIn = useCallback(async () => {
     try {
       setIsLoading(true);
       const userToken = await AsyncStorage.getItem('userToken');
-      const userInfo = await AsyncStorage.getItem('userInfo');
+      const userInfoStr = await AsyncStorage.getItem('userInfo');
 
-      if (userInfo) {
-        setUserInfo(JSON.parse(userInfo));
-      }
+      if (userInfoStr) {
+        const userInfoData = JSON.parse(userInfoStr);
+        setUserInfo(userInfoData);
 
-      if (userToken) {
-        setUserToken(userToken);
-        // Eğer token varsa otomatik olarak home sayfasına yönlendir
-        router.replace('/(auth)/home');
+        if (userToken) {
+          setUserToken(userToken);
+          
+          // Kullanıcı rolüne göre doğru sayfaya yönlendirme
+          if (userInfoData.role === 'admin') {
+            router.replace('/(auth)/admin-dashboard');
+          } else {
+            router.replace('/(auth)/home');
+          }
+        }
       }
     } catch (error) {
       console.log(`isLoggedIn error: ${error}`);
@@ -136,7 +180,7 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// PropTypes validasyonu ekliyoruz
+// PropTypes validasyonu
 AuthProvider.propTypes = {
   children: PropTypes.node.isRequired
 };
